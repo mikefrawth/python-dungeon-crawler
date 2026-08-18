@@ -24,7 +24,8 @@ class CharacterStats:
         self.wisdom = wisdom
         self.ego = ego
 
-    def get_modifier(self, ability_score):
+    @staticmethod
+    def get_modifier(ability_score: int):
         return (ability_score - 10) // 2
 
     def format_stat(self, stat_name):
