@@ -2,6 +2,7 @@ import pytest
 
 from character_stats import CharacterStats
 
+
 @pytest.fixture
 def stats():
     return CharacterStats(
@@ -30,9 +31,11 @@ def test_negative_modifier():
     stats = CharacterStats(strength=6)
     assert stats.get_modifier(stats.strength) == -2
 
+
 def test_odd_score_modifier_rounds_down():
     stats = CharacterStats(strength=9)
     assert stats.get_modifier(stats.strength) == -1
+
 
 def test_format_positive_stat(stats):
     assert stats.format_stat("strength") == "Strength 16 (+3)"
