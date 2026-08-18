@@ -2,6 +2,7 @@ import pytest
 
 from character_stats import CharacterStats
 
+
 @pytest.fixture
 def stats():
     return CharacterStats(

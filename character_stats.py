@@ -11,12 +11,12 @@ class CharacterStats:
 
     def __init__(
         self,
-        strength: int = 10,
-        dexterity: int = 10,
-        constitution: int = 10,
-        intelligence: int = 10,
-        wisdom: int = 10,
-        ego: int = 10,
+        strength: int = 0,
+        dexterity: int = 0,
+        constitution: int = 0,
+        intelligence: int = 0,
+        wisdom: int = 0,
+        ego: int = 0,
     ):
         self.strength = strength
         self.dexterity = dexterity
@@ -25,9 +25,10 @@ class CharacterStats:
         self.wisdom = wisdom
         self.ego = ego
 
+
     @staticmethod
-    def get_modifier(ability_score: int) -> int:
-        return (ability_score - 10) // 2
+    def get_modifier(ability_score: int):
+        return (ability_score) // 2
 
 
     def format_stat(self, stat_name) -> str:
