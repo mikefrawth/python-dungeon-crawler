@@ -1,3 +1,6 @@
+import math
+
+
 class CharacterAttributes:
     ATTRIBUTE_NAMES = (
         "might",
@@ -7,6 +10,10 @@ class CharacterAttributes:
         "intellect",
         "ego",
     )
+
+    BASELINE = 0
+    DEFAULT_COEFFICIENT = 1.0
+    DEFAULT_COEFFICIENTS = dict.fromkeys(ATTRIBUTE_NAMES, DEFAULT_COEFFICIENT)
 
 
     def __init__(
@@ -24,12 +31,21 @@ class CharacterAttributes:
         self.perception = perception
         self.intellect = intellect
         self.ego = ego
+        self.coefficients = dict(self.DEFAULT_COEFFICIENTS)
 
 
     def format_attribute(self, attribute_name) -> str:
         score = getattr(self, attribute_name)
 
         return f"{attribute_name.capitalize()} {score}"
+
+
+    def effective_value(self, attribute_name) -> float:
+        raw = getattr(self, attribute_name)
+        delta = raw - self.BASELINE
+        coefficient = self.coefficients[attribute_name]
+
+        return math.copysign(coefficient * math.sqrt(abs(delta)), delta)
 
 
     def __str__(self) -> str:
