@@ -18,12 +18,12 @@ class CharacterAttributes:
 
     def __init__(
         self,
-        might: int = 0,
-        toughness: int = 0,
-        agility: int = 0,
-        perception: int = 0,
-        intellect: int = 0,
-        ego: int = 0,
+        might: int = BASELINE,
+        toughness: int = BASELINE,
+        agility: int = BASELINE,
+        perception: int = BASELINE,
+        intellect: int = BASELINE,
+        ego: int = BASELINE,
     ):
         self.might = might
         self.toughness = toughness
