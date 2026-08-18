@@ -3,6 +3,10 @@
 Design conversation notes. Not implementation — decisions here still need to be turned
 into actual code (`CharacterAttributes`, `Character`, `Skill`, `Feat`, etc.).
 
+Canonical vocabulary lives in [`CONTEXT.md`](../CONTEXT.md); the *why* behind the
+harder-to-reverse calls below lives in [`docs/adr/`](./adr/). This file stays the
+working narrative draft.
+
 ## Levels
 
 - Characters have a level, capped at an undetermined max level (TBD once more content
@@ -45,24 +49,32 @@ Universal baseline for every attribute is **0** (not 10). Attributes can go nega
 | Toughness | HP |
 | Agility | Speed |
 | Perception | Accuracy |
-| Intellect | Area of effect and damage |
+| Intellect | Area of effect |
 | Ego | Charisma, mental fortitude, lowering hostile effects |
+
+Intellect's row previously read "Area of effect and damage" — the "damage" half was
+vestigial. Might owns all damage magnitude, physical or magical; Intellect scales
+reach (AoE radius/target count) only. See [ADR-0005](./adr/0005-might-owns-all-damage.md).
 
 ### Leftover domains from the old Strength/Dexterity/Constitution/Intelligence/Wisdom/Ego list
 
-These mechanics existed under the old stat table but don't fall cleanly under any of
-the six domains above. Recommended homes below — **not decided, still TBD**:
+These mechanics existed under the old stat table but didn't fall cleanly under any of
+the six domains above. Homes and calculation shapes are now **decided**:
 
-| Old mechanic | Recommended home | Note |
+| Old mechanic | Home | Calculation shape |
 |---|---|---|
-| Carry capacity | Might | strength-adjacent |
-| Weapon/armor requirements | Might | same reasoning, one home for simplicity |
-| Damage Reduction | Toughness | pairs naturally with HP |
-| Evasion/dodge | Agility | intuitive fit, though a judgment call |
-| Poison/stun resistance | Toughness | physical resilience |
-| Problem-solving/lore gathering | Intellect | direct carryover |
-| Stamina/mana cost reduction | Intellect | keeps Ego purely resistance/social, not resource economy |
-| Magic power (offense) | Might | folds into "damage and healing" broadly, regardless of source |
+| Carry capacity | Might | Linear (`base + raw_might * multiplier`), not a diminishing-returns curve — see [ADR-0003](./adr/0003-formula-family-per-stat.md) |
+| Weapon/armor requirements | Might | Hard gate, continuously re-evaluated (not a snapshot at equip time) — see [ADR-0004](./adr/0004-continuous-equip-gate.md) |
+| Damage Reduction | Toughness | Bounded curve, own instance — see "Damage Reduction specifics" below and [ADR-0002](./adr/0002-independent-curve-instances.md) |
+| Evasion/dodge | Agility | Feeds the Accuracy vs. Evasion hit-resolution contest — see [ADR-0001](./adr/0001-combat-hit-resolution.md) |
+| Poison/stun resistance | Toughness | Bounded curve, own instance separate from Damage Reduction's — see [ADR-0002](./adr/0002-independent-curve-instances.md) |
+| Problem-solving/lore gathering | Intellect | Skill-check/threshold (`effective_intellect >= fixed per-node DC`), not a curve — see [ADR-0003](./adr/0003-formula-family-per-stat.md) |
+| Stamina/mana cost reduction | Intellect | Bounded curve, own instance, coexists with Intellect's unbounded AoE duty — see [ADR-0002](./adr/0002-independent-curve-instances.md) |
+| Magic power (offense) | Might | Folds directly into Might's existing unbounded damage/healing curve; no separate spell-power track — see [ADR-0005](./adr/0005-might-owns-all-damage.md) |
+
+Carry-weight overflow (Encumbered — see `CONTEXT.md`) reduces effective Agility, which
+cascades into the existing Speed and Evasion outputs rather than introducing a
+standalone encumbrance status system.
 
 Leveling speed (previously under Intelligence) has been **cut** — not carried forward
 to any attribute.
@@ -123,6 +135,29 @@ Exact cap values are undecided — TBD during tuning.
   generally, not just "Toughness below baseline."
 - DR is bounded (see "Bounded diminishing returns" above) — no one should ever reach
   100% reduction from attributes alone.
+- Poison/Stun Resistance shares Toughness as its home but is a **separate bounded
+  curve instance** from DR (own cap/steepness) — see
+  [ADR-0002](./adr/0002-independent-curve-instances.md).
+
+## Combat resolution
+
+- **Hit chance**: `bounded_curve(raw_accuracy - raw_evasion, cap, steepness)` — the
+  curve is applied once, directly to the raw delta between Accuracy (Perception) and
+  Evasion (Agility), not to two already-curved "effective" values. See
+  [ADR-0001](./adr/0001-combat-hit-resolution.md).
+- **Debuff procs**: not a universal stat — no attribute grants a baseline "chance to
+  proc a debuff on any attack." Procs are purely ability-level, granted only by
+  skills/feats specifically designed to inflict one. A proc roll only happens after
+  the attack has already succeeded on the hit-chance roll above. A proc-capable
+  ability reads **one** governing attribute for both its proc chance and the debuff's
+  magnitude/duration — chosen per-ability, no fixed default. See
+  [ADR-0007](./adr/0007-debuff-procs-are-ability-level.md) and
+  [ADR-0008](./adr/0008-single-attribute-only.md).
+- **Resisting debuffs**: Ego gives the defender two independent bounded-curve layers —
+  a **Resist Chance** (chance to fully negate the debuff on application) and a
+  **Debuff Dampening** (reduces magnitude/duration of whatever gets through), mirroring
+  how Toughness gets both raw HP and DR. See
+  [ADR-0002](./adr/0002-independent-curve-instances.md).
 
 ## Skills
 
@@ -136,30 +171,9 @@ time; access is gated and scaled by attributes rather than by class.
   curve, they read the attribute's.
 - **No cap on skill power** — intentionally left open-ended (this is the "unbounded"
   curve family).
-- Most skills key off a **single attribute**.
-- Some skills offer **either/or** requirements (multiple attributes, best one counts).
-- Some skills are **hybrid**, requiring/using multiple attributes together. Identified
-  hybrid patterns so far (kept as a small fixed vocabulary rather than one-off code
-  per skill):
-  1. **`gate_both`** — dual-attribute requirement; character must clear the minimum
-     for *both* attributes to use the skill at all.
-  2. **`sum_independent`** — two components scale off two different attributes
-     independently and their outputs are summed/combined (e.g., a magic-swordsman
-     feat where weapon damage scales off a physical attribute and spell damage scales
-     off a magic attribute as separate additive components).
-  3. **`chance_and_magnitude`** — one attribute governs the *chance* of producing a
-     result (e.g., an attacking/accuracy attribute), a different attribute governs
-     the *magnitude* of that result when it triggers (e.g., a magic attribute scaling
-     the damage of a proc'd effect). This was the resolved design for the
-     magic-swordsman example.
-  - Dual-attribute hybrid skills are intended to **reward spreading investment**
-    across both attributes rather than dumping into one — this falls out naturally
-    from using diminishing-returns curves per attribute and summing them (concave
-    curves: splitting a fixed point budget across two attributes yields a higher
-    combined total than dumping it all into one).
-  - More hybrid patterns will likely emerge once actual feats/skills are designed;
-    not worth speculating further in the abstract. A per-skill **override hook** is
-    planned for cases that don't fit the fixed vocabulary.
+- Every skill has **exactly one governing attribute** — used for both the gate and
+  the scaling. No hybrid/dual-attribute skills, no either/or (best-of-two)
+  requirements. See [ADR-0008](./adr/0008-single-attribute-only.md).
 
 ## Feats
 
@@ -167,6 +181,12 @@ time; access is gated and scaled by attributes rather than by class.
 - Generic/universal — any character can learn a feat that meets the level
   requirement, unlike skills which are attribute-limited.
 - Represent special passives.
+- **Feats can still scale off attributes.** No minimum-requirement gate exists for
+  feats, but a feat's *effect magnitude* can read an attribute's effective
+  (curve-transformed) value exactly like a skill does. Like skills, a feat has
+  **exactly one governing attribute** — no multi-attribute combos. See
+  [ADR-0006](./adr/0006-feats-scale-without-gating.md) and
+  [ADR-0008](./adr/0008-single-attribute-only.md).
 
 ## Implementation approach (agreed direction)
 
@@ -174,9 +194,14 @@ time; access is gated and scaled by attributes rather than by class.
 - Dedicated `Skill` and `Feat` classes exist to give that data structure/behavior
   (e.g., checking requirements against a `CharacterAttributes`/`Character`, computing
   scaled output).
+- `Skill` and `Feat` share a common base/mixin for "read the governing attribute,
+  compute scaled output" — that logic is now identical between them.
+  Minimum-requirement gating stays a separate, optional behavior specific to `Skill`
+  only. See [ADR-0006](./adr/0006-feats-scale-without-gating.md) and
+  [ADR-0008](./adr/0008-single-attribute-only.md).
 - Each `Skill`/`Feat` entry supports an **override hook** — an escape valve for cases
-  that need bespoke logic beyond what the structured data + combine-mode vocabulary
-  can express (e.g., a complex feat effect).
+  that need bespoke logic beyond what the structured data can express (e.g., a
+  complex feat effect).
 - Skills and Feats are specifically taken/held by the `Character` class (not by
   `CharacterAttributes`, which just holds raw attribute values).
 
@@ -185,9 +210,8 @@ time; access is gated and scaled by attributes rather than by class.
 - Exact per-attribute negative ("taken out") thresholds and what happens at each.
 - Max character level.
 - Exact diminishing-returns coefficients/steepness values for each formula (power
-  curves and bounded curves alike) — to be tuned once there's content to balance
-  against.
-- Exact Damage Reduction (and other bounded attributes) cap values.
-- Whether more hybrid skill combine-modes beyond the three identified are needed —
-  deferred until concrete feats/skills are designed.
-- Recommended homes for leftover mechanics (see table above) — not decided, still TBD.
+  curves and bounded curves alike, including the now-separate instances for DR,
+  Status Resistance, Cost Reduction, the hit-resolution contest, Resist Chance, and
+  Debuff Dampening) — to be tuned once there's content to balance against.
+- Exact cap values for each bounded stat.
+- Exact carry-capacity linear formula constants (`base`, `multiplier`).
