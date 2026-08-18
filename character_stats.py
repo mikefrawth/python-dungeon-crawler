@@ -8,6 +8,7 @@ class CharacterStats:
         "ego",
     )
 
+
     def __init__(
         self,
         strength: int = 10,
@@ -25,16 +26,18 @@ class CharacterStats:
         self.ego = ego
 
     @staticmethod
-    def get_modifier(ability_score: int):
+    def get_modifier(ability_score: int) -> int:
         return (ability_score - 10) // 2
 
-    def format_stat(self, stat_name):
+
+    def format_stat(self, stat_name) -> str:
         score = getattr(self, stat_name)
         modifier = self.get_modifier(score)
 
         return f"{stat_name.capitalize()} {score} ({modifier:+})"
 
-    def __str__(self):
+
+    def __str__(self) -> str:
         stat_lines = []
 
         for stat_name in self.STAT_NAMES:
