@@ -19,11 +19,11 @@ def test_character_stores_name_attributes_and_level(attributes):
     assert character.level == 3
 
 
-def test_character_level_defaults_to_one(attributes):
+def test_character_level_defaults_to_default_level(attributes):
     character = Character("Aveline", attributes)
 
     assert character.level == Character.DEFAULT_LEVEL
-    assert character.level == 1
+    assert character.level == 0
 
 
 def test_character_level_zero_is_valid(attributes):

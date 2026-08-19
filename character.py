@@ -2,7 +2,7 @@ from character_attributes import CharacterAttributes
 
 
 class Character:
-    DEFAULT_LEVEL = 1
+    DEFAULT_LEVEL = 0
 
     def __init__(
         self,
