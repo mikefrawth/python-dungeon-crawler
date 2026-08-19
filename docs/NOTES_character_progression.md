@@ -24,6 +24,36 @@ working narrative draft.
 
 Universal baseline for every attribute is **0** (not 10). Attributes can go negative.
 
+### Character creation
+
+Creation is not a separate system — it's the same Investment Point mechanism as
+leveling/training, just spent before play starts. Every new character gets a **fixed
+starting budget** of Investment Points (same for everyone; exact size TBD during
+tuning), spent at flat cost — each point raises a raw attribute by exactly +1,
+regardless of current value. No progressive/escalating cost per point.
+
+Baseline 0 is a hard floor at creation: no dump-stat trade-down. A character cannot
+start below 0 on any attribute to free up points elsewhere — negative attributes are
+exclusively a post-creation consequence (curses, debuffs, drain), never a creation-time
+build choice. See [ADR-0009](./adr/0009-investment-points-flat-cost.md).
+
+A player character's creation also has a hard **per-attribute ceiling of 10** — no
+single attribute may exceed 10 at creation even with starting budget left unspent.
+Overspending past either the budget or the per-attribute cap is rejected outright, not
+silently clamped.
+
+The spend-tracking mechanism (points spent computed from current raw values, a spend
+operation, an undo operation) is **parameterized by budget and cap**, not hardcoded to
+the player-creation numbers. This is the same mechanism used to generate NPCs/special
+monsters (different budget/cap) and to handle leveling (existing 100 lifetime
+investment cap, per-level budget increments, instead of creation's one-time numbers).
+See [ADR-0010](./adr/0010-parameterized-spend-tracking.md).
+
+This mechanism is the **Investment Allocation** (see `CONTEXT.md`) — spend/remaining/undo
+are measured relative to a per-attribute snapshot taken at the start of the pass, not
+universal baseline 0. Creation is the special case where that snapshot is all zero.
+See [ADR-0011](./adr/0011-investment-allocation-is-snapshot-relative.md).
+
 - Investment cap: an attribute can be raised via investment (leveling, training, etc.)
   up to **100**.
 - Magic equipment can push an attribute **above 100**. Gear bonuses are added to the
@@ -207,6 +237,7 @@ time; access is gated and scaled by attributes rather than by class.
 
 ## Open questions / TBD
 
+- Exact size of the starting Investment Point budget (see "Character creation" above).
 - Exact per-attribute negative ("taken out") thresholds and what happens at each.
 - Max character level.
 - Exact diminishing-returns coefficients/steepness values for each formula (power

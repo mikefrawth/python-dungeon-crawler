@@ -14,6 +14,22 @@ _Avoid_: Stat, ability score
 An attribute's value after its diminishing-returns curve has been applied — the number skills, feats, and derived stats actually read. Never the raw attribute.
 _Avoid_: Modified value, adjusted stat
 
+**Investment Point**:
+The currency spent to raise a raw Attribute by exactly 1, always at flat cost regardless of the attribute's current value. Awarded as a fixed starting budget at character creation and again through leveling/training — the same mechanism both times, not two separate systems.
+_Avoid_: XP, stat point, ability score improvement
+
+**Investment Pool**:
+The total number of Investment Points available to spend in a single allocation pass (a player's starting budget, an NPC/monster's generation budget, or a level-up's increment). Scarcity across the pool is what forces trade-offs between attributes.
+_Avoid_: Budget, point pool
+
+**Investment Cap**:
+The maximum raw value a single Attribute may reach within one allocation pass, enforced independently of the Investment Pool — a character can be stopped from raising an Attribute further even with unspent pool remaining. Value depends on context (e.g. 10 for player character creation); not a single fixed number.
+_Avoid_: Stat cap, max stat
+
+**Investment Allocation**:
+One pass of spending an Investment Pool against an Investment Cap, starting from a per-attribute snapshot of raw values taken at the pass's start. Spend and undo are always measured relative to that snapshot, not to universal baseline 0 — player character creation is the special case where the snapshot happens to be all zero. The same mechanism, parameterized differently, drives creation, leveling, and NPC/monster generation.
+_Avoid_: Character creation (too narrow — implies creation-only), point buy
+
 ### Combat
 
 **Accuracy**:
