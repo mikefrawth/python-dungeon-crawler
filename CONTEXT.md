@@ -77,3 +77,11 @@ _Avoid_: Ability check
 **Governing Attribute**:
 The single attribute a skill or feat resolves around — the one it's gated by (skills only) and the one whose effective value drives its scaled output. Every skill and feat has exactly one; there are no multi-attribute (hybrid) skills or feats.
 _Avoid_: Combine mode, hybrid pattern, scaling mode
+
+**Skill**:
+A learnable ability with a hard minimum-requirement gate on its Governing Attribute's Effective Value — below the minimum, unusable outright. Once unlocked, its power scales off that same Effective Value. Not class-gated; access comes from attributes, not a class system.
+_Avoid_: Ability (too broad — Feats are abilities too), spell
+
+**Feat**:
+A level-gated passive any character can take once they hit the level requirement, regardless of attributes. Unlike a Skill, a Feat has no attribute-minimum gate — but its effect magnitude can still scale off a Governing Attribute's Effective Value exactly like a Skill's does.
+_Avoid_: Perk, talent
